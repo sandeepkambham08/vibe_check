@@ -10,15 +10,22 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/cameraroll": "^4.0.0",
     "@react-native-firebase/app": "^8.4.2",
     "@react-native-firebase/database": "^7.5.6",
+    "@react-native-firebase/storage": "^7.4.3",
     "firebase": "^7.20.0",
     "geofire": "^5.0.1",
     "react": "16.13.1",
     "react-native": "0.63.2",
     "react-native-camera": "^3.40.0",
     "react-native-geolocation-service": "^5.0.0",
-    "react-native-maps": ">=0.27.1"
+    "react-native-gesture-handler": "^1.8.0",
+    "react-native-maps": ">=0.27.1",
+    "react-native-snap-carousel": "^3.9.1",
+    "react-native-swipe-gestures": "^1.0.5",
+    "react-native-swipe-up-down": "^1.0.7",
+    "rn-fetch-blob": "0.10.15"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
@@ -26,6 +33,7 @@
     "@react-native-community/eslint-config": "^1.1.0",
     "babel-jest": "^25.1.0",
     "eslint": "^6.5.1",
+    "eslint-plugin-promise": "^4.2.1",
     "jest": "^25.1.0",
     "metro-react-native-babel-preset": "^0.59.0",
     "react-test-renderer": "16.13.1"

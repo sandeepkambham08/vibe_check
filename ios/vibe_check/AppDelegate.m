@@ -1,6 +1,5 @@
-#import <Firebase.h>
 #import "AppDelegate.h"
-
+#import <Firebase.h>
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
@@ -33,6 +32,11 @@ static void InitializeFlipper(UIApplication *application) {
   if ([FIRApp defaultApp] == nil) {
      [FIRApp configure];
    }
+
+// [START default_firestore]
+  FIRFirestore *defaultFirestore = [FIRFirestore firestore];
+// [END default_firestore]
+
 #ifdef FB_SONARKIT_ENABLED
   InitializeFlipper(application);
 #endif
