@@ -56,7 +56,8 @@ const url =  storage()
 // let storageRef = storage.ref()
 console.log(url._W);
 
-
+const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height;
 // // Prepare Blob support
 // const Blob = RNFetchBlob.polyfill.Blob
 // const fs = RNFetchBlob.fs
@@ -68,8 +69,8 @@ class App extends Component {
   state = {
     count: 0,
     where: { lat: null, lng: null },
-    mapScreen:false,
-    cameraView:true,
+    mapScreen:true,
+    cameraView:false,
     userPoint: true,
     cameraType: RNCamera.Constants.Type.front,
     img: null,
@@ -80,6 +81,7 @@ class App extends Component {
       latitudeDelta: 0.3,
       longitudeDelta: 0.3,
     },
+    focusCoords:null,
     // scrollHeight: 100,
   }
 
@@ -156,6 +158,75 @@ class App extends Component {
     }
   }
 
+  onTapToFocus = (touchOrigin) => {
+    const {x, y} = touchOrigin;
+    console.log(touchOrigin);
+    console.log(x + "  " + y);
+   
+    const x0 = x / width;
+    const y0 = y / height;
+
+    console.log(x0 + "  " + y0);
+
+    this.setState({
+      focusCoords: {
+        x: x0,
+        y: y0
+      }
+    });
+    // if(!this.cameraStyle || this.state.takingPic){
+    //   return;
+    // }
+
+    // const {x, y} = touchOrigin;
+    // let {width, height, top, left} = this.cameraStyle;
+
+    // // compensate for top/left changes
+    // let pageX2 = x - left;
+    // let pageY2 = y - top;
+
+    // // normalize coords as described by https://gist.github.com/Craigtut/6632a9ac7cfff55e74fb561862bc4edb
+    // const x0 = pageX2 / width;
+    // const y0 = pageY2 / height;
+
+    // let computedX = x0;
+    // let computedY = y0;
+
+    // // if portrait, need to apply a transform because RNCamera always measures coords in landscape mode
+    // // with the home button on the right. If the phone is rotated with the home button to the left
+    // // we will have issues here, and we have no way to detect that orientation!
+    // // TODO: Fix this, however, that orientation should never be used due to camera positon
+    // if(this.state.orientation.isPortrait){
+    //   computedX = y0;
+    //   computedY = -x0 + 1;
+    // }
+
+    // this.setState({
+    //   focusCoords: {
+    //     x: computedX,
+    //     y: computedY,
+    //     autoExposure: true
+    //   },
+    //   touchCoords: {
+    //     x: pageX2 - 50,
+    //     y: pageY2 - 50
+    //   }
+    // },this.onSetFocus);
+
+    // remove focus rectangle
+    if(this.focusTimeout){
+      clearTimeout(this.focusTimeout);
+      this.focusTimeout = null;
+    }
+
+  }
+
+  onSetFocus = () => {
+      this.focusTimeout = setTimeout(() => {
+       console.log('inside set focus')    
+      }, 1500);
+  }
+
   renderCamera() {
     return (
         <TouchableWithoutFeedback onPress={()=>{this.handleDoubleTap()}}>
@@ -163,6 +234,8 @@ class App extends Component {
           style={styles.preview}
           // style={{ width: '90%', height: '30%', marginLeft: 5, backgroundColor: 'powderblue' }}
           useNativeZoom={true}
+          autoFocusPointOfInterest={this.state.focusCoords}
+          onTap={this.onTapToFocus}
           type={this.state.cameraType}
           onDoubleTap={() => { this.flipCamera() }}
           // onPictureTaken={()=>this.picTaken()}
@@ -309,7 +382,8 @@ class App extends Component {
     };
     return (
       <View
-        style={{ height: windowHeight, alignItems: "center"}}>
+        style={{ height: windowHeight, alignItems: "center"}}
+        >
         <ScrollView
           style={{ flex: 1 }}
           scrollEnabled={true}>
@@ -333,19 +407,9 @@ class App extends Component {
             {this.state.cameraView && 
             <View>
             {this.state.img ? this.renderImage() : this.renderCamera()}
-            {/* <Button
-             style={{ flex: 1 }}
-             title="Go to Maps"
-             onPress={() => { this.ChangeScreen() }} /> */}
-             {/* <Button
-             style={{ flex: 1 }}
-             title="Upload"
-             onPress={() => { this.ChangeScreen() }} /> */}
              </View>}
             </Swipeable>
             </GestureRecognizer>
-            
-          {/* <Image source={{ uri: this.state.img }} style={styles.preview} /> */}
         </ScrollView>
       </View>
     )
