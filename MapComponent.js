@@ -7,8 +7,14 @@ import { StyleSheet } from 'react-native';
 
 // Imoprt RT database from firebase //
 import database from '@react-native-firebase/database';
+
 // Import new geolocation //
 import Geolocation from 'react-native-geolocation-service';
+
+// To calculate distance between points //
+import { getDistance } from 'geolib';
+import * as geolib from 'geolib';
+
 // To show animations of map items // 
 import Carousel from 'react-native-snap-carousel';
 
@@ -35,40 +41,51 @@ class MapComponent extends Component {
       latitudeDelta: 0.3,
       longitudeDelta: 0.3,
     },
-    markers:[],
+    markers: [],
     locationCoordinates: [
-      { locationName: 'Concordia University', latitude: 45.495176, longitude: -73.58, image: require('./media/concordia_university.jpg') },
-      { locationName: 'Old Port', latitude: 45.511463, longitude: -73.546349, image: require('./media/old_port.jpeg') },
-      { locationName: 'Mount Royal', latitude: 45.503496, longitude: -73.587061, image: require('./media/mount_royal.jpg') },
-      { locationName: 'Beaver Lake', latitude: 45.498949, longitude: -73.595817, image: require('./media/beaver_lake.jpeg') },
-      { locationName: 'Laronde', latitude: 45.522383, longitude: -73.534879, image: require('./media/laronde.jpg') },
-      { locationName: 'Botanical garden', latitude: 45.555922, longitude: -73.555670, image: require('./media/botanical_garden.jpg') },
-      { locationName: 'Angrignon park', latitude: 45.444521, longitude: -73.601707, image: require('./media/angrignon_park.jpg') },
-      { locationName: 'Westmount park', latitude: 45.480916, longitude: -73.598590, image: require('./media/westmount_park.jpg') },
+      { locationId:1, locationName: 'Old_Port', latitude: 45.511463, longitude: -73.546349, image: require('./media/old_port.jpeg') },
+      { locationId:2, locationName: 'Mount_Royal', latitude: 45.503496, longitude: -73.587061, image: require('./media/mount_royal.jpg') },
+      { locationId:3, locationName: 'Concordia_University', latitude: 45.495176, longitude: -73.58, image: require('./media/concordia_university.jpg') },
+      { locationId:4, locationName: 'De_maisonneuve', latitude: 45.492176, longitude: -73.58, image: require('./media/concordia_university.jpg') },
+      { locationId:5, locationName: 'Beaver_Lake', latitude: 45.498949, longitude: -73.595817, image: require('./media/beaver_lake.jpeg') },
+      { locationId:6, locationName: 'Laronde', latitude: 45.522383, longitude: -73.534879, image: require('./media/laronde.jpg') },
+      { locationId:7, locationName: 'Botanical_garden', latitude: 45.555922, longitude: -73.555670, image: require('./media/botanical_garden.jpg') },
+      { locationId:8, locationName: 'Angrignon_park', latitude: 45.444521, longitude: -73.601707, image: require('./media/angrignon_park.jpg') },
+      { locationId:9, locationName: 'Westmount_park', latitude: 45.480916, longitude: -73.598590, image: require('./media/westmount_park.jpg') },
     ],
     id: null,
+    NearestLocation:null,
   }
 
   showLocation = () => {
-    // this.setState({ userPoint: !this.state.userPoint })
-    Geolocation.getCurrentPosition(
-      (position) => {
-        console.log(position);
-        console.log("Inside show location -  watchPosition " + position.coords.latitude + " " + position.coords.longitude);
-          this._map.animateToRegion({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
-          })
-      },
-      (error) => {
-        // See error code charts below.
-        console.log(error.code, error.message);
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
-    );
+    console.log("Inside show location -  watchPosition ");
+    console.log(this.state.region.latitude + "  " + this.state.region.longitude);
+    this._map.animateToRegion({
+      latitude: this.state.region.latitude,
+      longitude: this.state.region.longitude,
+      latitudeDelta: 0.015,
+      longitudeDelta: 0.015,
+    })
   }
+  // this.setState({ userPoint: !this.state.userPoint })
+  // Geolocation.getCurrentPosition(
+  //   (position) => {
+  //     console.log(position);
+  //     console.log("Inside show location -  watchPosition " + position.coords.latitude + " " + position.coords.longitude);
+  //       this._map.animateToRegion({
+  //         latitude: position.coords.latitude,
+  //         longitude: position.coords.longitude,
+  //         latitudeDelta: 0.015,
+  //         longitudeDelta: 0.015,
+  //       })
+  //   },
+  //   (error) => {
+  //     // See error code charts below.
+  //     console.log(error.code, error.message);
+  //   },
+  //   { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
+  // );
+
   calculateDistance = (lat1, lat2, long1, long2) => {
     let p = 0.017453292519943295;    // Math.PI / 180
     let c = Math.cos;
@@ -76,7 +93,7 @@ class MapComponent extends Component {
     let dis = (12742 * Math.asin(Math.sqrt(a))); // 2 * R; R = 6371 km
     return dis;
   }
-  onRegionChange(region) {
+  onRegionChange = (region) => {
     // this.setState({
     //     region: region
     // });
@@ -112,7 +129,7 @@ class MapComponent extends Component {
       longitudeDelta: 0.015,
     })
 
-     this.state.markers[index].showCallout()
+    this.state.markers[index].showCallout()
   }
   onMarkerPressed = (location, index) => {
     this._map.animateToRegion({
@@ -125,36 +142,36 @@ class MapComponent extends Component {
     this._carousel.snapToItem(index);
   }
 
-  renderMapItem =({item}) =>
-   
-      <View style={styles.cardContainer}>
-          <Text style={styles.cardTitle}>{item.locationName}</Text>
-         <Image style={styles.cardImage} source={item.image}/>
-      </View>
-    
-  
+  renderMapItem = ({ item }) =>
+    <View style={styles.cardContainer}>
+      <Text style={styles.cardTitle}>{item.locationName}</Text>
+      <Image style={styles.cardImage} source={item.image} />
+    </View>
+
+
 
   render() {
     return (
       <View>
-        {/* {this.state.locationFound && */}
-        <View
-        style={styles.mapView}
-        >
-          <MapView
-            provider={PROVIDER_GOOGLE}
+        {this.state.locationFound &&
+          <View
             style={styles.mapScreen}
-            ref={map => this._map = map}
-            showsUserLocation={this.state.userPoint}
-            showsBuildings={true}
-            isZoomEnabled={true}
-            showZoomControls={true}
-            isRotateEnabled={true}
-            initialRegion={this.state.region}
-            onRegionChangeComplete={region => {
-              this.onRegionChange(region);
-            }}>
-            {/* <Marker
+          >
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={styles.mapView}
+              ref={map => this._map = map}
+              showsUserLocation={this.state.userPoint}
+              showsBuildings={true}
+              isZoomEnabled={true}
+              showZoomControls={true}
+              isRotateEnabled={true}
+              initialRegion={this.state.region}
+            // onRegionChangeComplete={region => {
+            //   this.onRegionChange(region);
+            // }}
+            >
+              {/* <Marker
               draggable
               coordinate={{ latitude: 45.5, longitude: -73.58 }}
               title={'Location 1'}
@@ -163,48 +180,56 @@ class MapComponent extends Component {
                 <Text>This is the place where we want to check vibe</Text>
               </Callout>
             </Marker> */}
-            {
-              this.state.locationCoordinates.map((marker, index) => (
-                <Marker
-                  key={marker.locationName}
-                   ref={ref => this.state.markers[index] = ref}
-                   onPress={() => this.onMarkerPressed(marker, index)}
-                  coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-                >
-                  <Callout>
-                    <Text>{marker.locationName}</Text>
-                  </Callout>
-                </Marker>
-              ))
-            }
+              {
+                this.state.locationCoordinates.map((marker, index) => (
+                  <Marker
+                    key={marker.locationName}
+                    ref={ref => this.state.markers[index] = ref}
+                    onPress={() => this.onMarkerPressed(marker, index)}
+                    coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                  >
+                    <Callout>
+                      <Text>{marker.locationName}</Text>
+                    </Callout>
+                  </Marker>
+                ))
+              }
 
-            {/* <View style={styles.optionsOnMapView} > */}
-              <TouchableOpacity style={styles.camera_shutter}
-                onPress={() => { this.props.ChangeScreen() }}>
+              {/* <View style={styles.optionsOnMapView} > */}
+              <TouchableOpacity
+                style={styles.camera_shutter}
+                // style={styles.showLocation}
+                onPress={() => { this.props.ChangeScreen(this.state.NearestLocation) }}>
                 <Image
                   source={require('./media/camera-shutter.png')}
                   //  style={styles.camera_shutter_icon}
-                  style={{ width: 100, height: 100 }}
+                  style={{ width: 50, height: 50, paddingTop:50 }}
                 />
               </TouchableOpacity>
-              <Button
-            title="Show location"
-            onPress={() => { this.showLocation() }}
-          />
-            {/* </View> */}
-          </MapView>
-          <Carousel
-          ref={(c) => { this._carousel = c; }}
-          data={this.state.locationCoordinates}
-          containerCustomStyle={styles.carousel}
-          renderItem={this.renderMapItem}
-          sliderWidth={windowWidth}
-          itemWidth={320}
-          removeClippedSubviews={false}
-          onSnapToItem={(index) => this.onCarouselItemChange(index)}
-        />
-        </View>
-          {/* } */}
+              <TouchableOpacity
+                onPress={() => { this.showLocation() }}
+                style={styles.showLocation}
+              >
+                <Image
+                  source={require('./media/navigation_icon.png')}
+                  style={{ width: 50, height: 50 }}
+                // style={styles.showLocation}
+                />
+              </TouchableOpacity>
+              {/* </View> */}
+            </MapView>
+            <Carousel
+              ref={(c) => { this._carousel = c; }}
+              data={this.state.locationCoordinates}
+              containerCustomStyle={styles.carousel}
+              renderItem={this.renderMapItem}
+              sliderWidth={windowWidth}
+              itemWidth={300}
+              removeClippedSubviews={false}
+              onSnapToItem={(index) => this.onCarouselItemChange(index)}
+            />
+          </View>
+        }
       </View>
     )
   }
@@ -219,6 +244,16 @@ class MapComponent extends Component {
         // this.setState({ where: { lat: position.coords.latitude, lng: position.coords.longitude }, locationFound:true }, ()=>{
         //   console.log(this.state.where.lat);
         // })
+        console.log("Distance to old port is : ", (getDistance(
+          position.coords,
+          { latitude: 45.511463, longitude: -73.546349 }
+        )) / 1000, "Kms");
+      console.log("Nearest location is : " , geolib.findNearest(position.coords, this.state.locationCoordinates).locationId);
+      let NearestLocation = geolib.findNearest(position.coords, this.state.locationCoordinates);
+      console.log("Nearest location is ",NearestLocation);
+      this.setState({NearestLocation:NearestLocation})
+      console.log(this.state.NearestLocation);
+
         this.setState({
           region: {
             latitude: position.coords.latitude,
@@ -232,7 +267,7 @@ class MapComponent extends Component {
         // See error code charts below.
         console.log(error.code, error.message);
       },
-      { enableHighAccuracy: true, distanceFilter: 10, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, distanceFilter: 10, timeout: 1000, maximumAge: 0 }
     );
   }
 
@@ -248,29 +283,42 @@ const styles = StyleSheet.create({
     //  marginTop: 50,
     // ...StyleSheet.absoluteFillObject,
   },
+
+  mapScreen: {
+    // flex: 1,
+    // height: Dimensions.get('window').height,
+    // width: Dimensions.get('window').width,
+    // justifyContent: 'flex-end',
+    // alignItems: 'center',
+  },
   mapView: {
-    height: Dimensions.get('window').height,
+    height: Dimensions.get('window').height / 1,
     width: Dimensions.get('window').width,
   },
-  mapScreen: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    // alignItems: 'center',
-   
-  },
   carousel: {
-    // position: 'absolute',
-    // top: 0,
+    position: 'absolute',
+    bottom: 0,
     // marginLeft:15,
     // alignItems:'center',
     marginBottom: 48,
     zIndex: 5,
   },
-  cardContainer: {
-    position: 'absolute', 
-    bottom:0,
+  showLocation: {
+    position: 'absolute',
+    bottom: 0,
+    marginLeft: 290,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    zIndex:4,
+    borderRadius: 24,
+    // alignItems:'center',
+    marginBottom: 260,
+    zIndex: 5,
+    overflow: 'hidden',
+  },
+  cardContainer: {
+    // position: 'absolute', 
+    // bottom:0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    zIndex: 4,
     paddingTop: 24,
     borderRadius: 24,
     overflow: 'hidden',
@@ -280,8 +328,15 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   camera_shutter: {
-    borderRadius: 100,
+    position: 'absolute',
+    bottom: 0,
+    marginLeft: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 24,
+    // alignItems:'center',
+    marginBottom: 260,
     overflow: 'hidden',
+
   },
   userLocationButton: {
     position: 'absolute',
@@ -290,10 +345,10 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   cardImage: {
-    height: 250,
-    width: 310,
+    height: 150,
+    width: 300,
     bottom: 0,
-    zIndex:4,
+    zIndex: 4,
     // position: 'absolute',
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24
@@ -301,8 +356,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: 'white',
     fontSize: 22,
-    paddingBottom:10,
-    alignSelf: 'center'
+    paddingBottom: 10,
+    alignSelf: 'center',
   }
 });
 

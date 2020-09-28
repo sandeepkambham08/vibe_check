@@ -33,7 +33,7 @@ import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 // Adding gesture - up & down  support //
 // import SwipeUpDown from 'react-native-swipe-up-down';
-import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
+import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 
 // To save image to gallery //
 import CameraRoll from "@react-native-community/cameraroll";
@@ -43,6 +43,8 @@ import Carousel from 'react-native-snap-carousel';
 // Import fetch blob to transfer pictures taken // 
 // import RNFetchBlob from 'rn-fetch-blob'
 
+// Import progressbar animation 
+import * as Progress from 'react-native-progress';
 
 const windowHeight = Dimensions.get('window').height;
 console.log(windowHeight);
@@ -50,7 +52,7 @@ const reference = storage().ref().child('images');
 reference.listAll();
 console.log(reference.listAll());
 
-const url =  storage()
+const url = storage()
   .ref('images/299.jpg')
   .getDownloadURL();
 // let storageRef = storage.ref()
@@ -58,6 +60,8 @@ console.log(url._W);
 
 const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
+
+let percentage = 0;
 // // Prepare Blob support
 // const Blob = RNFetchBlob.polyfill.Blob
 // const fs = RNFetchBlob.fs
@@ -69,8 +73,8 @@ class App extends Component {
   state = {
     count: 0,
     where: { lat: null, lng: null },
-    mapScreen:true,
-    cameraView:false,
+    mapScreen: true,
+    cameraView: false,
     userPoint: true,
     cameraType: RNCamera.Constants.Type.front,
     img: null,
@@ -81,7 +85,9 @@ class App extends Component {
       latitudeDelta: 0.3,
       longitudeDelta: 0.3,
     },
-    focusCoords:null,
+    focusCoords: null,
+    NearestLocation: null,
+    uploadInprogress:false,
     // scrollHeight: 100,
   }
 
@@ -106,20 +112,20 @@ class App extends Component {
         this.state.cameraType === RNCamera.Constants.Type.back
           ? RNCamera.Constants.Type.front
           : RNCamera.Constants.Type.back,
-    },()=>{
+    }, () => {
       console.log(this.state.cameraType);
     });
   }
   takePicture = async () => {
     console.log(this.state.cameraType);
     let that = this;
-    let mirrorImage = this.state.cameraType===1? false:true; // To mirror selfie's - 1: backCam, 2: frontCam
+    let mirrorImage = this.state.cameraType === 1 ? false : true; // To mirror selfie's - 1: backCam, 2: frontCam
     let options = {
       quality: 0.01,
       fixOrientation: true,
       forceUpOrientation: true,
       base64: true,
-      mirrorImage:mirrorImage,
+      mirrorImage: mirrorImage,
     };
 
     this.setState({ takingPic: true });
@@ -129,8 +135,8 @@ class App extends Component {
       const stringData = JSON.stringify(data);
       // Alert.alert('Success', JSON.stringify(data));
       //console.log(data);
-       console.log(data);
-     // console.log(stringData);
+      console.log(data);
+      // console.log(stringData);
       // console.log(data.base64);
       //console.log(data.uri);
       this.setState({ img: data.uri });
@@ -149,20 +155,21 @@ class App extends Component {
 
   handleDoubleTap = () => {
     const now = Date.now();
+    console.log(now);
     const DOUBLE_PRESS_DELAY = 500;
     if (this.lastTap && (now - this.lastTap) < DOUBLE_PRESS_DELAY) {
       this.flipCamera();
-      this.lastTap=null;
+      this.lastTap = null;
     } else {
       this.lastTap = now;
     }
   }
 
   onTapToFocus = (touchOrigin) => {
-    const {x, y} = touchOrigin;
+    const { x, y } = touchOrigin;
     console.log(touchOrigin);
     console.log(x + "  " + y);
-   
+
     const x0 = x / width;
     const y0 = y / height;
 
@@ -174,47 +181,8 @@ class App extends Component {
         y: y0
       }
     });
-    // if(!this.cameraStyle || this.state.takingPic){
-    //   return;
-    // }
 
-    // const {x, y} = touchOrigin;
-    // let {width, height, top, left} = this.cameraStyle;
-
-    // // compensate for top/left changes
-    // let pageX2 = x - left;
-    // let pageY2 = y - top;
-
-    // // normalize coords as described by https://gist.github.com/Craigtut/6632a9ac7cfff55e74fb561862bc4edb
-    // const x0 = pageX2 / width;
-    // const y0 = pageY2 / height;
-
-    // let computedX = x0;
-    // let computedY = y0;
-
-    // // if portrait, need to apply a transform because RNCamera always measures coords in landscape mode
-    // // with the home button on the right. If the phone is rotated with the home button to the left
-    // // we will have issues here, and we have no way to detect that orientation!
-    // // TODO: Fix this, however, that orientation should never be used due to camera positon
-    // if(this.state.orientation.isPortrait){
-    //   computedX = y0;
-    //   computedY = -x0 + 1;
-    // }
-
-    // this.setState({
-    //   focusCoords: {
-    //     x: computedX,
-    //     y: computedY,
-    //     autoExposure: true
-    //   },
-    //   touchCoords: {
-    //     x: pageX2 - 50,
-    //     y: pageY2 - 50
-    //   }
-    // },this.onSetFocus);
-
-    // remove focus rectangle
-    if(this.focusTimeout){
+    if (this.focusTimeout) {
       clearTimeout(this.focusTimeout);
       this.focusTimeout = null;
     }
@@ -222,45 +190,59 @@ class App extends Component {
   }
 
   onSetFocus = () => {
-      this.focusTimeout = setTimeout(() => {
-       console.log('inside set focus')    
-      }, 1500);
+    this.focusTimeout = setTimeout(() => {
+      console.log('inside set focus')
+    }, 1500);
   }
 
   renderCamera() {
+    const config = {
+      velocityThreshold: 0.4,
+      directionalOffsetThreshold: 30,
+      gestureIsClickThreshold: 5,
+    };
     return (
-        <TouchableWithoutFeedback onPress={()=>{this.handleDoubleTap()}}>
-        <RNCamera
-          style={styles.preview}
-          // style={{ width: '90%', height: '30%', marginLeft: 5, backgroundColor: 'powderblue' }}
-          useNativeZoom={true}
-          autoFocusPointOfInterest={this.state.focusCoords}
-          onTap={this.onTapToFocus}
-          type={this.state.cameraType}
-          onDoubleTap={() => { this.flipCamera() }}
-          // onPictureTaken={()=>this.picTaken()}
-          ref={ref => {
-            this.camera = ref
-          }}
-        >
-          <Button
-           style={{ flex: 1 }}
-          title="Flip camera"
-          onPress={() => { this.flipCamera() }} />
-          <TouchableOpacity style={styles.camera_shutter}
-          onPress={() => { this.takePicture() }}>
-          <Image 
-           source={require('./media/camera-shutter.png')}
-          //  style={styles.camera_shutter_icon}
-          style={{ width: 100, height: 100 }} 
-            /> 
-          </TouchableOpacity>
-          {/* <Button
+      <GestureRecognizer
+        config={config}
+        onSwipeDown={() => this.ChangeScreen()}
+      ><TouchableWithoutFeedback onPress={() => { this.handleDoubleTap() }}>
+          <RNCamera
+            style={styles.preview}
+            // style={{ width: '90%', height: '30%', marginLeft: 5, backgroundColor: 'powderblue' }}
+            useNativeZoom={true}
+            autoFocusPointOfInterest={this.state.focusCoords}
+            onTap={this.onTapToFocus}
+            type={this.state.cameraType}
+            // onDoubleTap={() => { this.flipCamera() }}
+            // onPictureTaken={()=>this.picTaken()}
+            ref={ref => {
+              this.camera = ref
+            }}
+            >
+            {this.state.uploadInprogress && <View>
+              <Text style={{color:'white'}}>Uploading</Text>
+              <Progress.Bar progress={percentage} color={'white'} width={width / 1.2} />
+              </View>}
+            <Button
+              style={{ flex: 1 }}
+              title="Flip camera"
+              onPress={() => { this.flipCamera() }} />
+            <TouchableOpacity style={styles.camera_shutter}
+              onPress={() => { this.takePicture() }}>
+              <Image
+                source={require('./media/camera-shutter.png')}
+                //  style={styles.camera_shutter_icon}
+                style={{ width: 100, height: 100 }}
+              />
+            </TouchableOpacity>
+            {/* <Button
             title="Snap"
             onPress={() => { this.takePicture() }}
           /> */}
-        </RNCamera>
-      </TouchableWithoutFeedback>      
+          </RNCamera>
+        </TouchableWithoutFeedback>
+      </GestureRecognizer>
+
     )
   }
 
@@ -269,7 +251,7 @@ class App extends Component {
     return (
       <View>
         <ImageBackground
-          source={{ uri: this.state.img}}
+          source={{ uri: this.state.img }}
           style={styles.preview}
         >
           <Button
@@ -282,11 +264,11 @@ class App extends Component {
           />
           <Button
             title='Save to device'
-            onPress={()=>CameraRoll.save(this.state.img).then(
-              this.setState({ img: null }, () =>{
+            onPress={() => CameraRoll.save(this.state.img).then(
+              this.setState({ img: null }, () => {
                 Alert.alert('Photo saved to camera roll');
               })
-              )}
+            )}
           />
         </ImageBackground>
 
@@ -295,78 +277,84 @@ class App extends Component {
   }
 
 
-  uploadToDb = () =>{
+  uploadToDb = () => {
+    let that = this;
     let imgUri = this.state.img;
-    console.log(imgUri);
-    // Create a root reference
-     let storageRef = storage().ref('/uploadedFiles/testingFile.jpg');
-     let uploadTask= storageRef.putFile(imgUri);
+    this.setState({ uploadInprogress: true }, () => {
+      this.setState({img:null});
+      let nearestLocation = this.state.NearestLocation;
+      console.log(imgUri, nearestLocation.locationName);
+      // Create a root reference
+      let storageRef = storage().ref('/VibePictures/' + nearestLocation.locationName + '/' + Date.now());
+      let uploadTask = storageRef.putFile(imgUri);
       // Add a progress observer to an upload task
-      uploadTask.on('state_changed', taskSnapshot => {
-        console.log(`${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`);
-        let percentage = (taskSnapshot.bytesTransferred/taskSnapshot.totalBytes)*100;
-        console.log('progress:'+ percentage + '%');
+      uploadTask.on('state_changed', function (snapshot) {
+        console.log(`${snapshot.bytesTransferred} transferred out of ${snapshot.totalBytes}`);
+        percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('progress:' + percentage + '%');
+      }, function (error) {
+        // Handle unsuccessful uploads
+        console.log('Upload was not successfull', error)
+      }, function () {
+        // Handle successful uploads on complete
+        console.log('Image uploaded to the bucket!');
+        that.setState({ uploadInprogress: false });
+        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+        console.log('File available at', downloadURL);
+        database().ref('/locations/'+nearestLocation.locationName).push({url:downloadURL,});
+        });
       });
 
-      uploadTask.then(() => {
-        console.log('Image uploaded to the bucket!');
-      });
+    })
 
   }
 
-  uploadImage = ( mime = 'image/jpg') => {
+  uploadImage = (mime = 'image/jpg') => {
 
     // return new Promise((resolve, reject) => {
-      let imgUri = this.state.img;
+    let imgUri = this.state.img;
 
-      let uploadBlob = null;
-      const uploadUri = imgUri.replace('file://', '') ;
-      console.log(uploadUri);
-      // const { currentUser } = firebase.auth();
-      const imageRef = storage().ref('/images/')
-      console.log(imageRef);
-  
-      fs.readFile(uploadUri, 'base64')
-        .then(data => {
-          // console.log(data);
-          return Blob.build(data, { type: `${mime};BASE64` });
-        })
-        .then(blob => {
-          uploadBlob = blob;
-          console.log(uploadBlob);
-         imageRef.put(blob, { contentType: mime });
-        })
-        // .then(() => {
-        //   uploadBlob.close()
-        //   return imageRef.getDownloadURL();
-        // })
-      //   .then(url => {
-      //     resolve(url);
-      //   })
-      //   .catch(error => {
-      //     reject(error)
-      // })
-    // })
+    let uploadBlob = null;
+    const uploadUri = imgUri.replace('file://', '');
+    console.log(uploadUri);
+    // const { currentUser } = firebase.auth();
+    const imageRef = storage().ref('/images/')
+    console.log(imageRef);
+
+    fs.readFile(uploadUri, 'base64')
+      .then(data => {
+        // console.log(data);
+        return Blob.build(data, { type: `${mime};BASE64` });
+      })
+      .then(blob => {
+        uploadBlob = blob;
+        console.log(uploadBlob);
+        imageRef.put(blob, { contentType: mime });
+      })
   }
 
-  
+
   //  Swipable fuctions 
 
-  ChangeScreen = () =>{
-    this.setState({mapScreen:!this.state.mapScreen,cameraView:!this.state.cameraView});
+  ChangeScreen = (nearestLocation) => {
+    if (nearestLocation) {
+      console.log('Received from map compoenent', nearestLocation)
+      this.setState({ NearestLocation: nearestLocation });
+    }
+    this.setState({ mapScreen: !this.state.mapScreen, cameraView: !this.state.cameraView });
   }
 
   render() {
 
-    leftActions = (progress, dragX)=> {
+    leftActions = (progress, dragX) => {
       const scale = dragX.interpolate({
-        inputRange:[0,100],
-        outputRange:[0,1],
-        extrapolate:'clamp'
+        inputRange: [0, 100],
+        outputRange: [0, 1],
+        extrapolate: 'clamp'
       })
-      return(
+      return (
         <View style={styles.leftAction}>
-          <Animated.Text style={[styles.swipeText, {transform:[{scale}]}]}>
+          <Animated.Text style={[styles.swipeText, { transform: [{ scale }] }]}>
             Go to maps
           </Animated.Text>
           {/* <MapComponent
@@ -375,52 +363,43 @@ class App extends Component {
         </View>
       )
     }
-    const config = {
-      velocityThreshold: 0.4,
-      directionalOffsetThreshold: 30,
-      gestureIsClickThreshold:5,
-    };
+
     return (
       <View
-        style={{ height: windowHeight, alignItems: "center"}}
-        >
-        <ScrollView
+      // style={{ height: windowHeight, alignItems: "center", flex: 1 }}
+      >
+        {/* <ScrollView
           style={{ flex: 1 }}
-          scrollEnabled={true}>
-          {/* <Text>Hello, I am at :  </Text>
-          <Text>latitude .: {this.state.region.latitude} </Text>
-          <Text>longitude : {this.state.region.longitude} </Text> */}
-          
-          {this.state.mapScreen &&
+          scrollEnabled={true}> */}
+        {this.state.mapScreen &&
           <View>
             <MapScreen
-            ChangeScreen={this.ChangeScreen}
+              ChangeScreen={this.ChangeScreen}
             />
-            </View>}
-            <GestureRecognizer
-            config={config}
-            onSwipeDown={() => this.ChangeScreen()}
-            >
-            <Swipeable
+          </View>}
+        {/* <Swipeable
             renderLeftActions={leftActions}
-            onSwipeableLeftOpen={()=>{this.ChangeScreen()}}>
-            {this.state.cameraView && 
-            <View>
+            onSwipeableLeftOpen={()=>{this.ChangeScreen()}}> */}
+        {this.state.cameraView &&
+          <View>
             {this.state.img ? this.renderImage() : this.renderCamera()}
-             </View>}
-            </Swipeable>
-            </GestureRecognizer>
-        </ScrollView>
+          </View>}
+        {/* </Swipeable> */}
+
+        {/* </ScrollView> */}
       </View>
     )
   }
   componentDidMount() {
+
     database().ref('/locations/').on('value', snapshot => {
       console.log(snapshot.val());
     })
-  }
 
+  }
+  // End of componentDidMount
 }
+// End of class
 
 
 const styles = StyleSheet.create({
@@ -428,46 +407,46 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   preview: {
+    // flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    height: Dimensions.get('window').height,
+    width: Dimensions.get('window').width,
+  },
+  mapScreen: {
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    height: Dimensions.get('window').height ,
+    height: Dimensions.get('window').height / 1.1,
     width: Dimensions.get('window').width,
   },
-  mapScreen:{
+  optionsOnMapView: {
+    position: 'absolute',
+    bottom: 0,
+  },
+  userLocationButton: {
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: 'black',
+    zIndex: 2,
+  },
+  leftAction: {
+    backgroundColor: '#388e3c',
+    justifyContent: 'center',
     flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    height: Dimensions.get('window').height/1.1,
-    width: Dimensions.get('window').width,
   },
-  optionsOnMapView:{
-    position: 'absolute',
-    bottom:0,
+  swipeText: {
+    color: 'white',
+    fontWeight: '700',
+    padding: 20,
   },
-  userLocationButton:{
-    position: 'absolute',
-    bottom:0,
-    backgroundColor:'black',
-    zIndex:2,
+  camera_shutter: {
+    borderRadius: 100,
+    overflow: 'hidden',
   },
-  leftAction:{
-    backgroundColor:'#388e3c',
-    justifyContent:'center',
-    flex:1,
-  },
-  swipeText:{
-    color:'white',
-    fontWeight:'700',
-    padding:20,
-  },
-  camera_shutter:{
-    borderRadius:100,
-    overflow:'hidden',
-  },
-  camera_shutter_icon:{
-    width:60,
-    height:60,
+  camera_shutter_icon: {
+    width: 60,
+    height: 60,
   },
   bigBlue: {
     color: 'blue',
