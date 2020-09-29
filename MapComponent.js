@@ -15,6 +15,10 @@ import Geolocation from 'react-native-geolocation-service';
 import { getDistance } from 'geolib';
 import * as geolib from 'geolib';
 
+// Adding gesture - up & down  support //
+// import SwipeUpDown from 'react-native-swipe-up-down';
+import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
+
 // To show animations of map items // 
 import Carousel from 'react-native-snap-carousel';
 
@@ -43,10 +47,10 @@ class MapComponent extends Component {
     },
     markers: [],
     locationCoordinates: [
-      { locationId:1, locationName: 'Old_Port', latitude: 45.511463, longitude: -73.546349, image: require('./media/old_port.jpeg') },
+      { locationId:1, locationName: 'De_maisonneuve', latitude: 45.492176, longitude: -73.58, image: require('./media/De_Maisonneuve.jpg') },
       { locationId:2, locationName: 'Mount_Royal', latitude: 45.503496, longitude: -73.587061, image: require('./media/mount_royal.jpg') },
       { locationId:3, locationName: 'Concordia_University', latitude: 45.495176, longitude: -73.58, image: require('./media/concordia_university.jpg') },
-      { locationId:4, locationName: 'De_maisonneuve', latitude: 45.492176, longitude: -73.58, image: require('./media/concordia_university.jpg') },
+      { locationId:4, locationName: 'Old_Port', latitude: 45.511463, longitude: -73.546349, image: require('./media/old_port.jpeg') },
       { locationId:5, locationName: 'Beaver_Lake', latitude: 45.498949, longitude: -73.595817, image: require('./media/beaver_lake.jpeg') },
       { locationId:6, locationName: 'Laronde', latitude: 45.522383, longitude: -73.534879, image: require('./media/laronde.jpg') },
       { locationId:7, locationName: 'Botanical_garden', latitude: 45.555922, longitude: -73.555670, image: require('./media/botanical_garden.jpg') },
@@ -142,11 +146,26 @@ class MapComponent extends Component {
     this._carousel.snapToItem(index);
   }
 
-  renderMapItem = ({ item }) =>
-    <View style={styles.cardContainer}>
+  renderMapItem = ({ item }) =>{
+    const config = {
+      velocityThreshold: 0.4,
+      directionalOffsetThreshold: 30,
+      gestureIsClickThreshold: 5,
+    };
+    return(
+      <View style={styles.cardContainer}>
+      <GestureRecognizer
+        config={config}
+        onSwipeDown={() => this.props.ChangeScreen()}
+        onSwipeUp={() => this.props.checkVibe(item)}
+      >
       <Text style={styles.cardTitle}>{item.locationName}</Text>
       <Image style={styles.cardImage} source={item.image} />
+      </GestureRecognizer>
     </View>
+    )
+  }
+    
 
 
 

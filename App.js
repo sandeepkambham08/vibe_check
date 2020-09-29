@@ -62,6 +62,15 @@ const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
 
 let percentage = 0;
+
+// For swipe recognition
+const config = {
+  velocityThreshold: 0.4,
+  directionalOffsetThreshold: 30,
+  gestureIsClickThreshold: 5,
+};
+
+
 // // Prepare Blob support
 // const Blob = RNFetchBlob.polyfill.Blob
 // const fs = RNFetchBlob.fs
@@ -87,7 +96,10 @@ class App extends Component {
     },
     focusCoords: null,
     NearestLocation: null,
-    uploadInprogress:false,
+    uploadInprogress: false,
+    vibeChecking: false,
+    vibeCheckLocation: null,
+    imageUrls: null,
     // scrollHeight: 100,
   }
 
@@ -218,11 +230,11 @@ class App extends Component {
             ref={ref => {
               this.camera = ref
             }}
-            >
+          >
             {this.state.uploadInprogress && <View>
-              <Text style={{color:'white'}}>Uploading</Text>
+              <Text style={{ color: 'white' }}>Uploading</Text>
               <Progress.Bar progress={percentage} color={'white'} width={width / 1.2} />
-              </View>}
+            </View>}
             <Button
               style={{ flex: 1 }}
               title="Flip camera"
@@ -281,7 +293,7 @@ class App extends Component {
     let that = this;
     let imgUri = this.state.img;
     this.setState({ uploadInprogress: true }, () => {
-      this.setState({img:null});
+      this.setState({ img: null });
       let nearestLocation = this.state.NearestLocation;
       console.log(imgUri, nearestLocation.locationName);
       // Create a root reference
@@ -300,8 +312,8 @@ class App extends Component {
         console.log('Image uploaded to the bucket!');
         that.setState({ uploadInprogress: false });
         uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-        console.log('File available at', downloadURL);
-        database().ref('/locations/'+nearestLocation.locationName).push({url:downloadURL,});
+          console.log('File available at', downloadURL);
+          database().ref('/locations/' + nearestLocation.locationName).push({ url: downloadURL, });
         });
       });
 
@@ -344,6 +356,81 @@ class App extends Component {
     this.setState({ mapScreen: !this.state.mapScreen, cameraView: !this.state.cameraView });
   }
 
+  checkVibe = (vibeCheckLocation) => {
+    let imageUrls = [];
+    let promise = new Promise(resolve => {
+      // executor (the producing code, "singer")
+      database().ref('/locations/' + vibeCheckLocation.locationName).on('value', snapshot => {
+        console.log(snapshot.val());
+        snapshot.forEach(url => {
+          console.log(url.val().url);
+          imageUrls.push(url.val().url);
+        })
+        console.log('completed snapshot', imageUrls);
+        resolve(imageUrls);
+      })
+    });
+    promise.then(result => {
+      console.log('Received from map compoenent', vibeCheckLocation);
+      this.setState({ mapScreen: false, cameraView: false, vibeChecking: true, vibeCheckLocation: vibeCheckLocation, imageUrls: result });
+    })
+  }
+
+
+  renderVibeLocation = () => {
+    let imageUrls = ["https://firebasestorage.googleapis.com/v0/b/vibe-c…=media&token=524e6d90-e739-43cd-b880-517dde92095b", "https://firebasestorage.googleapis.com/v0/b/vibe-c…=media&token=18bc6ea5-246e-4e8a-b900-bddabc2b3390"];
+    console.log('Inside render VibeLocation', this.state.vibeCheckLocation);
+    const vibeCheckLocation = this.state.vibeCheckLocation;
+    console.log(this.state.imageUrls);
+    if (this.state.imageUrls) {
+      return (
+        <GestureRecognizer
+          config={config}
+          onSwipeDown={() => this.backToMap()}
+        >
+          <ScrollView
+            snapToInterval={width}
+            decelerationRate='fast'
+            horizontal
+            pagingEnabled
+          >
+            {/* <Text style={{ marginTop: 100 }}> Checking vibe of {vibeCheckLocation.locationName} </Text> */}
+            {this.state.imageUrls.map((source, i) => {
+              { console.log(i, source) }
+              return (
+                <View key={i}>
+                  {/* <Text style={{width:200, marginLeft:100,marginTop:100}} >{source}</Text> */}
+                  <Image
+                    source={{ uri: source }}
+                    style={{ width: width, height: height }} />
+                </View>
+              )
+            })}
+          </ScrollView>
+        </GestureRecognizer>
+      )
+    }
+    else {
+      return (
+        <GestureRecognizer
+          config={config}
+          onSwipeDown={() => this.backToMap()}
+        >
+          <Image
+            source={require('./media/camera-shutter.png')}
+            style={{ width: width, height: height }} />
+
+        </GestureRecognizer>
+      )
+    }
+  }
+
+
+  backToMap = () => {
+    console.log('Inside back to map')
+    this.setState({ mapScreen: true, cameraView: false, vibeChecking: false, });
+  }
+
   render() {
 
     leftActions = (progress, dragX) => {
@@ -364,6 +451,8 @@ class App extends Component {
       )
     }
 
+
+
     return (
       <View
       // style={{ height: windowHeight, alignItems: "center", flex: 1 }}
@@ -375,8 +464,14 @@ class App extends Component {
           <View>
             <MapScreen
               ChangeScreen={this.ChangeScreen}
+              checkVibe={this.checkVibe}
             />
           </View>}
+        {this.state.vibeChecking &&
+          <View>
+            {this.renderVibeLocation()}
+          </View>
+        }
         {/* <Swipeable
             renderLeftActions={leftActions}
             onSwipeableLeftOpen={()=>{this.ChangeScreen()}}> */}
