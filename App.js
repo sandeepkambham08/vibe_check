@@ -67,7 +67,7 @@ let percentage = 0;
 const config = {
   velocityThreshold: 0.4,
   directionalOffsetThreshold: 30,
-  gestureIsClickThreshold: 5,
+  gestureIsClickThreshold: 50,
 };
 
 
@@ -384,14 +384,24 @@ class App extends Component {
     console.log(this.state.imageUrls);
     if (this.state.imageUrls) {
       return (
+        // <Carousel
+        //       ref={(c) => { this._carousel = c; }}
+        //       data={this.state.locationCoordinates}
+              
+        //       renderItem={this.renderMapItem}
+        //       sliderWidth={windowWidth}
+        //       itemWidth={300}
+        //       removeClippedSubviews={false}
+        //       onSnapToItem={(index) => this.onCarouselItemChange(index)}
+        // />
         <GestureRecognizer
           config={config}
-          onSwipeDown={() => this.backToMap()}
+          onSwipeRight={() => this.backToMap()}
         >
           <ScrollView
-            snapToInterval={width}
+            snapToInterval={height}
             decelerationRate='fast'
-            horizontal
+            Vertical
             pagingEnabled
           >
             {/* <Text style={{ marginTop: 100 }}> Checking vibe of {vibeCheckLocation.locationName} </Text> */}

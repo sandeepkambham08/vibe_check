@@ -206,6 +206,7 @@ class MapComponent extends Component {
                     ref={ref => this.state.markers[index] = ref}
                     onPress={() => this.onMarkerPressed(marker, index)}
                     coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                    image={require('./media/map_marker.png')}
                   >
                     <Callout>
                       <Text>{marker.locationName}</Text>
