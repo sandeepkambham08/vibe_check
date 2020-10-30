@@ -32,15 +32,15 @@ Check the vibe of a location. This helps to get an idea about the crowd or how e
   - How to create launch screen and logos for the app
 
 ## Libraries used 
-  - [react] (https://github.com/facebook/react)
-  - [react-native] (https://github.com/facebook/react-native)
-  - [react-native-camera] (https://github.com/react-native-camera/react-native-camera)
-  - [react-native-maps] (https://github.com/react-native-maps/react-native-maps)
-  - [react-native-geolocation-service] (https://github.com/Agontuk/react-native-geolocation-service)
-  - [geolib] (https://github.com/manuelbieh/geolib)
-  - [react-native-snap-carousel] (https://github.com/archriss/react-native-snap-carousel)
-  - [react-native-firebase] (https://github.com/invertase/react-native-firebase)
-  - [react-native-progress] (https://github.com/oblador/react-native-progress)
-  - [react-native-swipe-gestures] (https://github.com/glepur/react-native-swipe-gestures)
-  - [react-native-community/cameraroll] (https://github.com/react-native-cameraroll/react-native-cameraroll)
+  - [react](https://github.com/facebook/react)
+  - [react-native](https://github.com/facebook/react-native)
+  - [react-native-camera](https://github.com/react-native-camera/react-native-camera)
+  - [react-native-maps](https://github.com/react-native-maps/react-native-maps)
+  - [react-native-geolocation-service](https://github.com/Agontuk/react-native-geolocation-service)
+  - [geolib](https://github.com/manuelbieh/geolib)
+  - [react-native-snap-carousel](https://github.com/archriss/react-native-snap-carousel)
+  - [react-native-firebase](https://github.com/invertase/react-native-firebase)
+  - [react-native-progress](https://github.com/oblador/react-native-progress)
+  - [react-native-swipe-gestures](https://github.com/glepur/react-native-swipe-gestures)
+  - [react-native-community/cameraroll](https://github.com/react-native-cameraroll/react-native-cameraroll)
 
