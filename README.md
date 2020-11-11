@@ -12,14 +12,14 @@ Check the vibe of a location. This helps to get an idea about the crowd or how e
 
 
 1. Scroll through vibe locations - tap on navigation to see your current location
-![Alt text](./src/media/Vibe-check-gif/Vibe-check-location-1.gif "scroll locations")
+![Alt text](./media/Vibe-check-gif/Vibe-check-location-1.gif "scroll locations")
 
 
 2. Upload photo to near by vibe location - tap on shutter button to open camera, snap, upload.
-![Alt text](./src/media/Vibe-check-gif/Vibe-check-upload-2.gif "Upload photo")
+![Alt text](./media/Vibe-check-gif/Vibe-check-upload-2.gif "Upload photo")
 
 3. See uploaded photos for a specific location - swipe down from camera to go to maps, swipe up on particular location to see uploaded photos, in photos swipe up/down to scroll through photos and swipe right to go back.  
-![Alt text](./src/media/Vibe-check-gif/Vibe-check-3.gif "Check vibe")
+![Alt text](./media/Vibe-check-gif/Vibe-check-3.gif "Check vibe")
 
 ## Experiences gained by developing this project 
 
