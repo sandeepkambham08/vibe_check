@@ -651,6 +651,8 @@ PODS:
     - React-jsi (= 0.63.2)
   - rn-fetch-blob (0.10.6):
     - React-Core
+  - RNCAsyncStorage (1.12.1):
+    - React-Core
   - RNFBApp (8.4.2):
     - Firebase/CoreOnly (~> 6.30.0)
     - React
@@ -727,6 +729,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - rn-fetch-blob (from `../node_modules/rn-fetch-blob`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-community/async-storage`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBDatabase (from `../node_modules/@react-native-firebase/database`)"
   - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
@@ -831,6 +834,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   rn-fetch-blob:
     :path: "../node_modules/rn-fetch-blob"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-community/async-storage"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBDatabase:
@@ -904,6 +909,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 4d2e726957f4087449739b595f107c0d4b6c2d2d
   ReactCommon: a0a1edbebcac5e91338371b72ffc66aa822792ce
   rn-fetch-blob: 2b5313836e2dcd6a8f37ca61a10a732cc851819b
+  RNCAsyncStorage: cb9a623793918c6699586281f0b51cbc38f046f9
   RNFBApp: 373cce42559cc7a9a42afc876746e3946de3e32e
   RNFBDatabase: ebd3d8ff04166f01ca30aeb6359a4db2de427644
   RNFBStorage: 5a2b16803e784436fb1261806edee98a0397714b

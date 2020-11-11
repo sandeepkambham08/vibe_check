@@ -46,6 +46,8 @@ import Carousel from 'react-native-snap-carousel';
 // Import progressbar animation 
 import * as Progress from 'react-native-progress';
 
+import AsyncStorage from '@react-native-community/async-storage';
+
 const windowHeight = Dimensions.get('window').height;
 console.log(windowHeight);
 const reference = storage().ref().child('images');
